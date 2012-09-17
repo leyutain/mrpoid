@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <item type="id" name="btn_up"></item>
+    <item type="id" name="btn_home"></item>
+    <item type="id" name="edit_path"></item>
+</resources>

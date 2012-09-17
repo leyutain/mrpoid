@@ -1,0 +1,25 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 9.00
+# Visual Studio 2005
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Mrpoid", "Mrpoid.vcproj", "{C7FB5C06-4E74-44A6-AE48-1B7F37B3DEF7}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "HelloWorld", "HelloWorld\HelloWorld.vcproj", "{2060C770-FF70-4425-BECD-FA3F254C125B}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Win32 = Debug|Win32
+		Release|Win32 = Release|Win32
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{C7FB5C06-4E74-44A6-AE48-1B7F37B3DEF7}.Debug|Win32.ActiveCfg = Debug|Win32
+		{C7FB5C06-4E74-44A6-AE48-1B7F37B3DEF7}.Release|Win32.ActiveCfg = Release|Win32
+		{C7FB5C06-4E74-44A6-AE48-1B7F37B3DEF7}.Release|Win32.Build.0 = Release|Win32
+		{2060C770-FF70-4425-BECD-FA3F254C125B}.Debug|Win32.ActiveCfg = Debug|Win32
+		{2060C770-FF70-4425-BECD-FA3F254C125B}.Debug|Win32.Build.0 = Debug|Win32
+		{2060C770-FF70-4425-BECD-FA3F254C125B}.Release|Win32.ActiveCfg = Release|Win32
+		{2060C770-FF70-4425-BECD-FA3F254C125B}.Release|Win32.Build.0 = Release|Win32
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal
