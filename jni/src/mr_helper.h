@@ -269,13 +269,13 @@ typedef void (*T_mrp_settop) (int32 L, int idx);
 
 
 typedef struct{
-   uint8**                  mr_m0_files;
-   uint32*                  vm_state;
-   int32*                  mr_state;
-   int32*                  _bi;
+   uint8**                mr_m0_files;
+   uint32*                vm_state;
+   int32*                 mr_state;
+   int32*                 _bi;
    
-   void**                  mr_timer_p;
-   uint32*                  mr_timer_state;
+   void**                 mr_timer_p;
+   uint32*                mr_timer_state;
    void*                  mr_timer_run_without_pause;
    
    void*                  mr_gzInBuf;
@@ -292,7 +292,7 @@ typedef struct{
 
 
    void*                   mrp_gettop; //1937
-   T_mrp_settop   mrp_settop;
+   T_mrp_settop				mrp_settop;
    void*   mrp_pushvalue;
    void*   mrp_remove;
    void*   mrp_insert;

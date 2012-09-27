@@ -12,8 +12,8 @@
 #define	TS_FT_BLOD			0x0002	//粗体
 #define	TS_FT_ELASTIC		0x0004	//斜体
 #endif
-#define TS_FT_AUTONEWLINE	0x0008	//绘制区域内自动换行
-#define TS_FT_CRLFNEWLINE	0x0010	//识别 \r \n 自动换行
+#define TSF_AUTONEWLINE	0x0008	//绘制区域内自动换行
+#define TSF_CRLFNEWLINE	0x0010	//识别 \r \n 自动换行
 
 //字符间距定义
 #define TS_FONT_HMARGIN		0	//两字符间水平间距

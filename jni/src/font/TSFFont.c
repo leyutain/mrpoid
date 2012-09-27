@@ -4,6 +4,8 @@
 #include "..\Engine.h"
 #include "TSFFont.h"
 
+#include <string.h>
+
 
 #define TSF_LOG LOGI
 
@@ -265,7 +267,7 @@ int32 tsf_drawTextLeft(uint8 *pcText, int16 x, int16 y,
 				if(ch == 0x0d)	//移除第二个换行符
 					p += 2;
 
-				if(flag & TS_FT_CRLFNEWLINE) {
+				if(flag & TSF_CRLFNEWLINE) {
 					chy += (fh + TS_FONT_VMARGIN);
 					chx = x;
 					lines++;
@@ -280,7 +282,7 @@ int32 tsf_drawTextLeft(uint8 *pcText, int16 x, int16 y,
 				chx += (ch == CHR_SPACE? g_nowUse.AsciiWidth : 4*g_nowUse.AsciiWidth);
 				
 				if( (chx > right)) {	//自动换行属性
-					if((TS_FT_AUTONEWLINE & flag)){
+					if((TSF_AUTONEWLINE & flag)){
 						chy += (fh + TS_FONT_VMARGIN);
 						chx = x;
 						lines++;
@@ -305,7 +307,7 @@ int32 tsf_drawTextLeft(uint8 *pcText, int16 x, int16 y,
 			//测量换行
 			if(((chx + fw) > right))
 			{
-				if(flag & TS_FT_AUTONEWLINE){
+				if(flag & TSF_AUTONEWLINE){
 					chy += (fh + TS_FONT_VMARGIN);
 					chx = x;
 					lines++;

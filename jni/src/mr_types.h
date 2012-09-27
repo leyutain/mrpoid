@@ -18,6 +18,9 @@ typedef  unsigned char      uint8;        /*Unsigned  Signed 8  bit value */
 typedef  signed char          int8;        /* Signed 8  bit value */
 typedef  signed short         int16;       /* Signed 16 bit value */
 
+typedef char * PSTR;
+typedef const char * PCSTR;
+
 #ifndef FALSE
 #define FALSE 0
 #endif
@@ -31,7 +34,9 @@ typedef  signed short         int16;       /* Signed 16 bit value */
 #endif
 
 //typedef long int size_t;
-typedef uint8 U8;
+typedef uint8			U8;
+typedef unsigned int	UINT;
+
 
 #define MR_SUCCESS  0    //³É¹¦
 #define MR_FAILED   -1    //Ê§°Ü

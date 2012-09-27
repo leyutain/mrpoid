@@ -19,19 +19,22 @@ public class EmulatorView extends View {
 	private Emulator emulator;
 	private int scnX, scnY; // ÆÁÄ»Î»ÖÃÆ«ÒÆ
 
+	private void initRes() {
+		bitmap = Bitmap.createBitmap(emulator.getScnWidth(), emulator.getScnHeight(), Config.RGB_565);
+		canvas2 = new Canvas(bitmap);
+		paint = new Paint(Paint.ANTI_ALIAS_FLAG);
+	}
+
 	public EmulatorView(Context context, AttributeSet attrs, int defStyle) {
 		super(context, attrs, defStyle);
-		// TODO Auto-generated constructor stub
+		initRes();
 	}
 
 	public EmulatorView(Context context, Emulator emulator) {
 		super(context);
 		this.emulator = emulator;
 
-		// TODO Auto-generated constructor stub
-		bitmap = Bitmap.createBitmap(emulator.getScnWidth(), emulator.getScnHeight(), Config.RGB_565);
-		canvas2 = new Canvas(bitmap);
-		paint = new Paint(Paint.ANTI_ALIAS_FLAG);
+		initRes();
 		this.emulator.setBitmap(bitmap);
 
 		setFocusableInTouchMode(true);
@@ -56,6 +59,9 @@ public class EmulatorView extends View {
 	public void draw(Canvas canvas) {
 		// canvas.scale(1, 1);
 		// canvas.drawBitmap(bitmap, scnX, scnY, null);
+
+		rectF.set(0, 0, 480, 640);
+
 		canvas.drawBitmap(bitmap, null, rectF, null);
 		// canvas.scale(-1, -1);
 

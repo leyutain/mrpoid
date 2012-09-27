@@ -4,6 +4,7 @@
 #include "dsm.h"
 
 #include <zlib.h>
+#include <malloc.h>
 
 
 //-----------------------------------------

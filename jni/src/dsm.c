@@ -22,8 +22,13 @@
 #include "mr_helper.h"
 #include "Engine.h"
 
+#include "font/TSFFont.h"
+
+
 
 extern int gbToUCS2BE(unsigned char *gbCode, unsigned char *unicode, int bufSize);
+static int32 dsmSwitchPath(uint8* input, int32 input_len, uint8** output, int32* output_len);
+
 
 int showApiLog = TRUE; 
 
@@ -203,7 +208,9 @@ int32 mr_timerStart(uint16 t)
 /*停止定时器。*/
 int32 mr_timerStop(void)
 {
-	return MR_FAILED;
+	if(showApiLog) LOGI("mr_timerStop");
+
+	return MR_SUCCESS;
 }
 
 /*取得时间，单位ms*/
@@ -255,6 +262,7 @@ int32 mr_getUserInfo(mr_userinfo* info)
 /*任务睡眠，单位ms*/
 int32 mr_sleep(uint32 ms)
 {
+	if(showApiLog) LOGI("mr_sleep(%d)", ms);
 	sleep(ms);
 
 	return MR_SUCCESS;
@@ -263,39 +271,221 @@ int32 mr_sleep(uint32 ms)
 /*平台扩展接口*/
 int32 mr_plat(int32 code, int32 param)
 {
-	return MR_FAILED;
+	if(showApiLog) LOGI("mr_plat(code:%d, param:%d)",
+		code, param);
+
+	switch(code)
+	{
+	case MR_SET_ACTIVE_SIM: //设置激活的sim卡
+		{
+			return MR_IGNORE;
+			break;
+		}
+
+	case MR_GET_SCENE: //获取前景模式
+		{
+			int32 ret =0;
+			extern U8 gactivatedprofile;
+
+			/*switch(gactivatedprofile)
+			{
+			case MMI_PROFILE_GENERAL:
+				ret = MR_SCENE_NORMAL;
+				break;
+			case MMI_PROFILE_MEETING:
+				ret = MR_SCENE_MEETING;
+				break;
+			case MMI_PROFILE_INDOOR:
+				ret = MR_SCENE_INDOOR;
+				break;
+			case MMI_PROFILE_OUTDOOR:
+				ret = MR_SCENE_OUTDOOR;
+				break;
+			default:
+				return MR_FAILED;
+				break;
+			}*/
+			return (ret+MR_PLAT_VALUE_BASE);
+
+			break;
+		}
+
+	case MR_GET_FILE_POS: //获取文件读写指针
+		{
+			/*UINT pos = 0;
+			int ret = tell(param, &pos);
+
+			if(ret == FS_NO_ERROR)
+				return (pos+MR_PLAT_VALUE_BASE);
+			else
+				return MR_FAILED;*/
+			break;
+		}
+
+	case MR_GET_CELL_ID_START:
+		{
+#ifdef MMI_ON_HARDWARE_P			
+
+			dsm_initBSID();
+			return MR_SUCCESS;
+#else
+			return MR_FAILED;
+#endif
+			break;
+		}
+
+	case MR_GET_CELL_ID_STOP:
+		{
+#ifdef MMI_ON_HARDWARE_P
+			dsm_unInitBSID();
+			return MR_SUCCESS;
+#else
+			return MR_FAILED;
+#endif
+			break;
+		}
+
+	case MR_STOP_SHOW_PIC: //停止GIF动画显示
+		{
+//			if(dsmPicShow.appid > 0) /*防止没有调用画，就停止*/
+//			{
+//				memset(&dsmPicShow,0,sizeof(dsmPicShow));
+//				StopTimer(DSM_GLANCE_TIMER);
+//
+//				if(GetActiveScreenId() == IDLE_SCREEN_ID)
+//				{
+//#ifdef __GDI_MEMORY_PROFILE_2__
+//					gdi_draw_solid_rect(DSM_IDLE_POS_X, DSM_IDLE_POS_Y, DSM_IDLE_POS_X+DSM_IDLE_MAX_WIDTH-1,DSM_IDLE_POS_Y+DSM_IDLE_MAX_HEIGHT-1, GDI_COLOR_TRANSPARENT);
+//#else
+//					pixtel_UI_fill_rectangle(DSM_IDLE_POS_X, DSM_IDLE_POS_Y, DSM_IDLE_POS_X+DSM_IDLE_MAX_WIDTH-1,DSM_IDLE_POS_Y+DSM_IDLE_MAX_HEIGHT-1, GDI_COLOR_TRANSPARENT );
+//#endif
+//					gdi_layer_blt_previous(DSM_IDLE_POS_X, DSM_IDLE_POS_Y, DSM_IDLE_POS_X+DSM_IDLE_MAX_WIDTH-1, DSM_IDLE_POS_Y+DSM_IDLE_MAX_HEIGHT-1);
+//				}
+//			}	
+
+			return MR_SUCCESS;
+		}
+
+	case MR_ACTIVE_APP: //激活后台运行 程序
+		{
+			/*if((dsmState != DSM_BACK_RUN)||(param != dsmBackStage.appid))
+				return MR_FAILED;
+
+			return EntryDsmScreenByActiveApp();*/
+
+			break;
+		}
+
+	case MR_NES_GET_READ_ADDR: //获取NES读取地址
+		{
+			//return dsmReadAddr;
+			break;
+		}	
+	case MR_NES_SET_WRITE_ADDR: //设置NES写入地址
+		{
+			//dsmWriteAddr = param;
+			return MR_SUCCESS;
+		}
+
+	case MR_GOTO_BASE_WIN: //返回 home
+		{
+			break;
+		}
+
+	case MR_SET_KEY_END: //设置屏蔽挂机键
+		{
+			return MR_SUCCESS;
+		}
+
+	/*case  MR_CONNECT:
+		{
+			if(socStat[param].socStat == DSM_SOC_CONNECTED)
+			{
+				return MR_SUCCESS;
+			}
+			else if(socStat[param].socStat == DSM_SOC_CONNECTING)
+			{
+				SetProtocolEventHandler(dsm_soc_socket_notify, MSG_ID_APP_SOC_NOTIFY_IND);
+				return MR_WAITING;
+			}
+			else
+			{
+				return MR_FAILED;
+			}
+		}		
+	case  MR_SET_SOCTIME:
+		{
+			return MR_SUCCESS;
+		}*/
+
+	case MR_GET_RAND://1211
+		{
+			srand(mr_getTime());
+			return MR_PLAT_VALUE_BASE+rand()%param;
+		}
+
+	case MR_CHECK_TOUCH: //是否支持触屏
+		{
+			return MR_NORMAL_SCREEN;
+		}
+
+	case MR_GET_HANDSET_LG: //获取语言
+		{
+			/*extern U16 gCurrLangIndex;			
+			if(gCurrLangIndex == 0)
+				return MR_ENGLISH;
+			else*/
+				return MR_CHINESE;
+		}
+
+	case MR_SET_VOL: //设置音量
+		{
+			//dsm_set_vol(param);
+			return MR_SUCCESS;
+		}
+	}
+
+	return MR_IGNORE;
 }
 
 /*增强的平台扩展接口*/
 int32 mr_platEx(int32 code, uint8* input, int32 input_len, uint8** output, int32* output_len, MR_PLAT_EX_CB *cb)
 {
-	switch (code)
+	if(showApiLog) LOGI("mr_platEx(code:%d, il:%d)", 
+		code, input_len);
+	
+	switch(code)
 	{
-	case 0:
-		break;
-
+	case MR_TUROFFBACKLIGHT: //关闭背光常亮
+		{
+			break;
+		}
+	case MR_TURONBACKLIGHT: //开启背光常亮
+		{
+			break;
+		}
+	case MR_SWITCHPATH: //切换跟目录
+		{
+			return dsmSwitchPath(input,input_len,output,output_len);
+			break;
+		}
 	}
 
 	return MR_FAILED;
 }
 
 ///////////////////////// 文件操作接口 //////////////////////////////////////
-#define DSM_ROOT_PATH  "mythroad"
+/**
+ * 协议：SDCARD 作为跟目录 以 /结尾
+ *		dsmWorkPath 以 / 结尾，切换到跟路径后为空
+ */
+#define DSM_ROOT_PATH	"mythroad/"
+#define SDCARD_PATH		"/mnt/sdcard/"
 
 static char dsmWorkPath[DSM_MAX_FILE_LEN + 1] = DSM_ROOT_PATH; /*路径都是gb 编码*/
 static char dsmLaunchPath[DSM_MAX_FILE_LEN + 1] = DSM_ROOT_PATH; /*路径都是gb 编码*/
-static uint8 dsmLaunchDrv = 'c'; /*每个应用默认的盘符都可能是不一样的*/
-static uint8 dsmWorkDrv = 'c';
+static char filenamebuf[DSM_MAX_FILE_LEN + 1] = {0};
 
-static void SetDsmWorkDrv(U8 drv)
-{
-	dsmWorkDrv = drv;
-}
-
-U8 GetDsmWorkDrv(void)
-{
-	return dsmWorkDrv;
-}
 
 static void SetDsmWorkPath(char *path)
 {
@@ -315,7 +505,6 @@ char *GetDsmWorkPath(void)
  ****************************************************************************/
 void dsmRestoreRootDir(void)
 {
-	dsmWorkDrv = 'c';
 	memcpy(dsmWorkPath, DSM_ROOT_PATH, strlen(DSM_ROOT_PATH) + 1);
 }
 
@@ -327,8 +516,125 @@ void dsmRestoreRootDir(void)
  ****************************************************************************/
 static void dsmToLaunchDir(void)
 {
-	dsmWorkDrv = dsmLaunchDrv;
 	memcpy(dsmWorkPath, dsmLaunchPath, strlen(dsmLaunchPath) + 1);
+}
+
+/**
+ * 格式化路径字符串
+ * 例：/aa//bb/c/ 得到 aa/bb/c （最标准的路径字符串）
+ *
+ * 返回格式化后的字符串
+ */
+int32 formatPathString( char *str ) {
+	char *p, *pb;
+	int32 len;
+
+	//空字符串 *str=='\0'
+	if(!str || *str=='\0') 
+		return -1;
+
+	len = strlen(str);
+	p = (PSTR)str;
+	while(*p == '/'){
+		p++;
+		len--;
+	}
+
+	if(!p || !*p){
+		return -1;		//全是 /// 的情况在这里就可以返回
+	}
+	memmove(str, p, len+1);
+
+	pb = str;
+	len = 0;
+	p = str;
+	while(*p){
+		PCSTR pp = strchr((PSTR)p, '/');
+		int l = pp-p + 1;
+		memmove(pb, p, l);
+		pb += l;
+		len += l;
+		while(*pp == '/')
+			pp++;
+		p = (PSTR)pp;
+	}
+
+	if(str[len - 1] == '/'){
+		str[--len] = '\0';
+	}
+
+	return len;
+}
+
+/****************************************************************************
+函数名:static int32 dsmSwitchPath(uint8* input, int32 input_len, uint8** output, int32* output_len)
+描  述:VM 对路径操作的接口
+参  数:
+返  回:
+****************************************************************************/
+static int32 dsmSwitchPath(uint8* input, int32 input_len, uint8** output, int32* output_len)
+{
+	int32 len = 0;
+
+	if(input ==  NULL)
+		return MR_FAILED;
+
+	if(strlen((char *)input) > (DSM_MAX_FILE_LEN-3))
+		return MR_FAILED;
+
+	switch(input[0])
+	{
+	case 'Z': //返回刚启动时路径
+	case 'z':
+		dsmToLaunchDir();
+		break;
+
+	case 'Y': //获取当前工作绝对路径
+	case 'y':
+		{
+			memset(filenamebuf, 0, sizeof(filenamebuf));
+			sprintf(filenamebuf, "%s%s", SDCARD_PATH, GetDsmWorkPath());
+
+			*output = (uint8 *)filenamebuf;
+			*output_len = strlen(filenamebuf);
+			break;	
+		}
+
+	case 'X': //进入DSM根目录
+	case 'x':
+		{
+			dsmRestoreRootDir();
+			break;
+		}
+
+	default:
+		{
+			input_len = strlen(input);
+
+			if(input_len > DSM_MAX_FILE_LEN )
+				return;
+
+			if(input_len <= 3){ //c:/
+				SetDsmWorkPath("");
+			}else{ // c:/app
+				LOGI("input:%s", input);
+
+				memset(filenamebuf, 0, sizeof(filenamebuf));
+				//sprintf(filenamebuf, "%s", input+3);
+				//formatPathString(filenamebuf);
+				//strcat(filenamebuf, "/");
+
+				if(showApiLog) LOGI("dsm workpath has change to:%s", filenamebuf);
+
+				sprintf(filenamebuf, "%s", input);
+				SetDsmWorkPath(filenamebuf);
+			}
+
+			break;
+		}
+	}
+
+	return MR_SUCCESS;
 }
 
 /****************************************************************************
@@ -342,15 +648,15 @@ char* get_filename(char * outputbuf, const char *filename)
 {
 	char *p = outputbuf;
 
-	if (strlen((char *) GetDsmWorkPath()) == 1) //根目录 /
-		p += sprintf(p, "/mnt/sdcard");
-	else
-		p += sprintf(p, "/mnt/sdcard/%s", GetDsmWorkPath());
+	sprintf(p, "%s%s%s", SDCARD_PATH, GetDsmWorkPath(), filename);
 
-	if (strlen(filename) > 0)
-		p += sprintf(p, "/%s", filename);
+	//if (strlen((char *) GetDsmWorkPath()) == 0) //根目录 /
+	//	p += sprintf(p, "/mnt/sdcard");
+	//else
+	//	p += sprintf(p, "/mnt/sdcard/%s", GetDsmWorkPath());
 
-	//kal_prompt_trace(MOD_MMI, "outputbuf = %s", outputbuf);
+	//if (strlen(filename) > 0)
+	//	p += sprintf(p, "/%s", filename);
 
 	return outputbuf;
 }
@@ -731,11 +1037,13 @@ void mr_md5_finish(md5_state_t *pms, md5_byte_t digest[16])
 
 int32 mr_load_sms_cfg(void)
 {
+	if(showApiLog) LOGI("mr_load_sms_cfg");
 	return MR_FAILED;
 }
 
 int32 mr_save_sms_cfg(int32 f)
 {
+	if(showApiLog) LOGI("mr_save_sms_cfg(f:%d)", f);
 	return MR_FAILED;
 }
 
@@ -772,19 +1080,22 @@ clip_rect(int *x0, int *y0, int *x1, int *y1, int r, int b){
 	return 0;
 }
 
- 
 void mr_drawBitmap(uint16* bmp, int16 x, int16 y, uint16 w, uint16 h)
 {
-	if(showApiLog) LOGI("mr_drawBitmap(bmp:0x%08x, x:%d, y:%d, w:%d, h:%d)", bmp, x, y, w, h);
+	//if(showApiLog) LOGI("mr_drawBitmap(bmp:0x%08x, x:%d, y:%d, w:%d, h:%d)", bmp, x, y, w, h);
 
 	drawBitmap(bmp, x, y, w, h);
 }
 
 const char *mr_getCharBitmap(uint16 ch, uint16 fontSize, int *width, int *height)
 {
-	if(showApiLog) LOGI("mr_getCharBitmap(ch:%04x)", ch);
+	int32 w, h;
 
-	tsf_charWidthHeight(ch, width, height);
+	//if(showApiLog) LOGI("mr_getCharBitmap(ch:%04x)", ch);
+
+	tsf_charWidthHeight(ch, &w, &h);
+	if(width) *width = w;
+	if(height) *height = h;
 	//第一个字节 字宽 第二个字节 字字节数
 	return (char*)(tsf_getCharBitmap(ch)+2);
 }
@@ -839,8 +1150,8 @@ void mr_DrawRect(int16 sx, int16 sy, int16 w, int16 h,
 
 	h = y1-y+1;
 	w = x1-x+1;
-	for (i=y; i<y1; i++){
-		for(j=x; j<x1; j++)
+	for (i=y; i<=y1; i++){
+		for(j=x; j<=x1; j++)
 			*(p + i*sw + j) = c;
 	}
 
@@ -856,14 +1167,14 @@ int32 mr_DrawText(char* pcText, int16 x, int16 y,
 	c.r = r, c.g = g, c.b = b;
 	if(!is_unicode){
 		uint8 *out = (uint8 *)mr_c2u(pcText, NULL, NULL);
-		tsf_drawText(out, x, y, c, 0);
+		tsf_drawText(out, x, y, c);
 		mr_free(out, 0);
 	}else{
-		tsf_drawText((uint8*)pcText, x, y, c, 0);
+		tsf_drawText((uint8*)pcText, x, y, c);
 	}
 
-	if(showApiLog) LOGI("mr_DrawText(text:%s, x:%d, y:%d, )", 
-		pcText, x, y);
+	//if(showApiLog) LOGI("mr_DrawText(text:%s, x:%d, y:%d, )", 
+	//	pcText, x, y);
 
 	return MR_SUCCESS;
 }
@@ -890,7 +1201,19 @@ int mr_wstrlen(char * str)
 
 int32 mr_DrawTextEx(char* pcText, int16 x, int16 y, mr_screenRectSt rect, mr_colourSt colorst, int flag, uint16 font)
 {
-	tsf_drawTextLeft((uint8*)pcText, x, y, rect, colorst, flag);
+	int f=0;
+
+	if(flag&DRAW_TEXT_EX_IS_AUTO_NEWLINE)
+		f |= TSF_AUTONEWLINE|TSF_CRLFNEWLINE;
+
+	if(flag&DRAW_TEXT_EX_IS_UNICODE){
+		tsf_drawTextLeft((uint8*)pcText, x, y, rect, colorst, f);
+	}else{
+		uint8 *out = (uint8 *)mr_c2u(pcText, NULL, NULL);
+		tsf_drawTextLeft((uint8*)out, x, y, rect, colorst, f);
+		mr_free(out, 0);
+	}
+		
 	return MR_SUCCESS;
 }
 
@@ -901,20 +1224,26 @@ int32 mr_EffSetCon(int16 x, int16 y, int16 w, int16 h, int16 perr, int16 perg, i
 
 int32 mr_TestCom(int32 L, int input0, int input1)
 {
+	if(showApiLog) LOGI("mr_TestCom(l%d, p0:%d, p1:%d)",
+		L, input0, input1);
 
 }
 
 int32 mr_TestCom1(int32 L, int input0, char* input1, int32 len)
 {
+	if(showApiLog) LOGI("mr_TestCom1(l%d, p0:%d, p1:%s, lp1:%d)",
+		L, input0, input1, len);
 
 }
 
+
+//static char buf[1024];
 uint16* mr_c2u(char *cp, int32 *err, int32 *size)
 {
 	int l = mr_strlen(cp);
-	unsigned char *out = mr_malloc(l+2);
-	mr_memset(out, 0, l+2);
-	l = gbToUCS2BE(cp, out, l);
+	unsigned char *out = mr_malloc(l*2+2);
+	mr_memset(out, 0, l*2+2);
+	l = gbToUCS2BE(cp, out, l*2);
 	if(size) *size = l;
 	
 	return (uint16*)out;

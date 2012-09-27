@@ -1,6 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <item type="id" name="btn_softleft"></item>
+    <item type="id" name="btn_softright"></item>
+    <item type="id" name="btn_left"></item>
+    <item type="id" name="btn_right"></item>
+    <item type="id" name="btn_down"></item>
     <item type="id" name="btn_up"></item>
+    <item type="id" name="btn_select"></item>
     <item type="id" name="btn_home"></item>
     <item type="id" name="edit_path"></item>
 </resources>

@@ -12,7 +12,7 @@
 
 
 void engine_init();
-
+void engine_free();
 
 //引擎全局变量
 MR_C_FUNCTION		mr_helper;
@@ -104,8 +104,9 @@ int32 mr_event(int16 type, int32 param1, int32 param2){
 
 /*退出Mythroad并释放相关资源*/
 int32 mr_stop(void){
+	engine_free();
+
 	return mr_event(MR_EVENT_EXIT, 0, 0);
-	//.....
 }
 
 int32 mr_extLoad(void *addr, int32 len) {
@@ -143,10 +144,11 @@ int32 mr_extLoad(void *addr, int32 len) {
 	ext->check = 0x7FD854EB;
 	ext->code_buf = buffer;
 	ext->code_len = len;
-	ext->init_func = (MR_C_FUNCTION)(buffer + 8);
+	ext->init_func = (MR_LOAD_C_FUNCTION)(buffer + 8);
 	//设置ext函数表
 	*((int32*)buffer) = (int32)&func_table;
 	*((int32*)buffer+1) = (int32)&cfunction_table;
+
 
 	return MR_SUCCESS;
 }
@@ -284,18 +286,19 @@ int32 mr_mem_free(char* mem, uint32 mem_len)
 	return MR_SUCCESS;
 }
 
-void engine_init(){
+void engine_init() {
 	mr_screenBuf = screenBuf[0];
 	mr_screen_w = SCNW, mr_screen_h = SCNH, mr_screen_bit = SCNBIT;
 	memset(start_filename, 0, sizeof(start_filename));
 	memset(pack_filename, 0, sizeof(pack_filename));
 
-	mr_memset(&func_table, 0, sizeof(mr_table));
-	mr_memset(&extChunk_table, 0, sizeof(mrc_extChunk_st));
-	mr_memset(&cfunction_table, 0, sizeof(mr_c_function_st));
+	memset(&func_table, 0, sizeof(mr_table));
+	memset(&extChunk_table, 0, sizeof(mrc_extChunk_st));
+	memset(&cfunction_table, 0, sizeof(mr_c_function_st));
 
 	//设置 mr_table 表
-	mr_memcpy(&func_table, &mr_sys_table, sizeof(mr_table));
+	memcpy(&func_table, &mr_sys_table, sizeof(mr_table));
+
 	func_table._mr_c_function_new = mr_c_function_new;
 	func_table.mr_screenBuf = &mr_screenBuf;
 	func_table.mr_screen_w = &mr_screen_w;
@@ -303,6 +306,25 @@ void engine_init(){
 	func_table.mr_screen_bit = &mr_screen_bit;
 	func_table.start_filename = start_filename;
 	func_table.pack_filename = pack_filename;
+
+	func_table._mr_c_internal_table = NULL;
+	func_table._mr_c_port_table = NULL;
+
+	func_table.mr_sms_cfg_buf = malloc(120*20);
+	memset(func_table.mr_sms_cfg_buf, 0, 120*20);
+
+	//分配内存
+	mr_mem_get(&LG_mem_base, &LG_mem_len);
+	LG_mem_end = LG_mem_base + LG_mem_len;
+	LG_mem_left = LG_mem_len;
+	LG_mem_top = DSM_MEM_SIZE;
+	LG_mem_min = DSM_MEM_SIZE_MIN;
+	func_table.LG_mem_base = &LG_mem_base;
+	func_table.LG_mem_len = &LG_mem_len;
+	func_table.LG_mem_end = &LG_mem_end;
+	func_table.LG_mem_left = &LG_mem_left;
+	func_table.LG_mem_top = &LG_mem_top;
+	func_table.LG_mem_min = &LG_mem_min;
 
 	//extChunk_table 表
 	extChunk_table.extMrTable = &func_table;
@@ -316,7 +338,15 @@ void engine_init(){
 	//其他组件
 	tsf_init();
 
-	LOGI("engine_init scnbuf:0x%08x", *func_table.mr_screenBuf);
+	LOGI("engine init scnbuf:0x%08x", *func_table.mr_screenBuf);
+}
+
+void engine_free(){
+
+	mr_mem_free(LG_mem_base, LG_mem_len);
+	free(extChunk_table.code_buf);
+
+	LOGI("engine free");
 }
 
 void *mr_readFileFromMrp(const char *filename, int32 *filelen, int32 lookfor)
@@ -398,8 +428,8 @@ mr_table mr_sys_table = {
 	NULL,
 	NULL,
 
-	&mr_sys_internal_tabl,
-	&mr_sys_c_port_table,
+	NULL,//&mr_sys_internal_tabl,
+	NULL,//&mr_sys_c_port_table,
 
 	mr_c_function_new,
 

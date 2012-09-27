@@ -1,5 +1,5 @@
 #include <stdio.h>
-
+#include "dsm.h"
 
 #define  gb2uCount  15416
 //±àÂë±í
@@ -1314,7 +1314,8 @@ int gbToUCS2BE(unsigned char *gbCode, unsigned char *unicode, int bufSize)
 	if(!gbCode || !gbCode[0] || !unicode || bufSize<=0) 
 		return -1;
 
-	memset(unicode, 0, bufSize);
+	mr_memset(unicode, 0, bufSize);
+
 	while(gbCode[i] && j<bufSize-2)
 	{
 		if (gbCode[i] < 0x80)
@@ -1344,33 +1345,3 @@ int gbToUCS2BE(unsigned char *gbCode, unsigned char *unicode, int bufSize)
 
 	return j;
 }
-
-
-#if 0
-int main(int argc, char* argv[])
-{ 
-	int n,i; 
-	char buff[1024];
-	unsigned char buff2[1024];
-
-	memset(buff2,0,sizeof(buff2));
-
-
-	printf("size: %d \n", sizeof(gb2uTable));
-
-	sprintf(buff,"12345");
-	n = gb2uniBE(buff, buff2, 128);
-	printf("%s\n", buff);
-
-	//for(i=0;i<n;i++)
-	//	printf("[%02x]\n",buff2[i]);
-
-	for(i=0;i<n;i++)
-		printf("\\x%02x", buff2[i]);
-
-	printf("\n");
-
-
-	return 0;
-}
-#endif

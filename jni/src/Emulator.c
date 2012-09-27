@@ -10,15 +10,6 @@
 #include "Engine.h"
 
 
-
-
-//#define  LOG_TAG    "libplasma"
-//#define  LOGI(...)  __android_log_print(ANDROID_LOG_INFO,LOG_TAG,__VA_ARGS__)
-//#define  LOGE(...)  __android_log_print(ANDROID_LOG_ERROR,LOG_TAG,__VA_ARGS__)
-
-
-extern unsigned char ic_dir[512];
-
 static JavaVM		*gs_jvm=NULL;
 static jobject		selfobj, bitmap;
 static jmethodID	id_flush; //Ë¢ÐÂ»­²¼º¯Êý ID
@@ -29,6 +20,16 @@ static int transKeycode(int andcode)
 	switch(andcode)
 	{
 	case AKEYCODE_DPAD_UP: return MR_KEY_UP;
+	case AKEYCODE_DPAD_RIGHT: return MR_KEY_RIGHT;
+	case AKEYCODE_DPAD_LEFT: return MR_KEY_LEFT;
+	case AKEYCODE_DPAD_DOWN: return MR_KEY_DOWN;
+	case AKEYCODE_DPAD_CENTER: return MR_KEY_SELECT;
+
+	case AKEYCODE_SOFT_LEFT: return MR_KEY_SOFTLEFT;
+	case AKEYCODE_SOFT_RIGHT: return MR_KEY_SOFTRIGHT;
+
+	case AKEYCODE_MENU: return MR_KEY_SOFTLEFT;
+	case AKEYCODE_BACK: return MR_KEY_SOFTRIGHT;
 	}
 }
 
@@ -67,6 +68,20 @@ Java_com_tszy_core_Emulator_init(JNIEnv * env, jobject self)
 }
 
 JNIEXPORT void JNICALL 
+Java_com_tszy_core_Emulator_dispose(JNIEnv * env, jobject self)
+{
+	(*env)->DeleteGlobalRef(env, selfobj);
+	(*env)->DeleteGlobalRef(env, bitmap);
+
+	gs_jvm = NULL;
+	selfobj = NULL;
+	bitmap = NULL;
+	id_flush = NULL;
+
+	mr_stop();
+}
+
+JNIEXPORT void JNICALL 
 Java_com_tszy_core_Emulator_setBitmap(JNIEnv * env, jobject self, jobject jbitmap)
 {
 	bitmap = (*env)->NewGlobalRef(env, jbitmap);
@@ -88,30 +103,35 @@ JNIEXPORT void JNICALL
 Java_com_tszy_core_Emulator_touchDown(JNIEnv * env, jobject self, jint x, jint y)
 {
 	LOGI("touchDown %d,%d", x, y);
+	mr_event(MR_MOUSE_DOWN, x, y);
 }
 
 JNIEXPORT void JNICALL 
 Java_com_tszy_core_Emulator_touchMove(JNIEnv * env, jobject self, jint x, jint y)
 {
 	LOGI("touchMove %d,%d", x, y);
+	mr_event(MR_MOUSE_MOVE, x, y);
 }
 
 JNIEXPORT void JNICALL 
 Java_com_tszy_core_Emulator_touchUp(JNIEnv * env, jobject self, jint x, jint y)
 {
 	LOGI("touchUp %d,%d", x, y);
+	mr_event(MR_MOUSE_UP, x, y);
 }
 
 JNIEXPORT void JNICALL 
 Java_com_tszy_core_Emulator_onKeyDown(JNIEnv * env, jobject self, jint key)
 {
 	LOGI("onKeyDown %d", key);
+	mr_event(MR_KEY_PRESS, transKeycode(key), 0);
 }
 
 JNIEXPORT void JNICALL 
 Java_com_tszy_core_Emulator_onKeyUp(JNIEnv * env, jobject self, jint key)
 {
 	LOGI("onKeyUp %d", key);
+	mr_event(MR_KEY_RELEASE, transKeycode(key), 0);
 }
 
 ///////////////////////////////////////////////////////////////////////////
@@ -150,7 +170,7 @@ void drawBitmap(uint16* data, int x, int y, int w, int h)
 	}
 
 	p = (uint16 *)pixels;
-	for (i=y; i<y1; i++)
+	for (i=y; i<=y1; i++)
 		memcpy((p + (sw*i) + x), (data + (sw*i) + x), w*2);
 
 	AndroidBitmap_unlockPixels(env, bitmap);
